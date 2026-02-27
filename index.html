@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carrera de Informática - SSA Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #c0111f;
+    --red-dark: #8e0c17;
+    --blue-dark: #0d2137;
+    --blue-mid: #163352;
+    --blue-light: #1e4a77;
+    --teal: #2ab4c0;
+    --green: #5cb800;
+    --green-hover: #4a9900;
+    --white: #ffffff;
+    --gray-light: #f4f6f8;
+    --gray: #c8d0db;
+    --text: #2c3e50;
+    --shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    background: var(--blue-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 80%, rgba(30,74,119,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 20%, rgba(22,51,82,0.6) 0%, transparent 60%),
+      linear-gradient(160deg, #0d2137 0%, #163352 50%, #0d2137 100%);
+    z-index: 0;
+  }
+
+  .bg-shapes {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .shape {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.04);
+    border-radius: 4px;
+    transform: rotate(30deg);
+  }
+  .shape:nth-child(1) { width: 180px; height: 180px; top: 60%; left: 2%; opacity: 0.5; }
+  .shape:nth-child(2) { width: 120px; height: 120px; top: 20%; left: 5%; opacity: 0.3; }
+  .shape:nth-child(3) { width: 250px; height: 250px; top: 30%; right: 1%; opacity: 0.25; transform: rotate(15deg); }
+  .shape:nth-child(4) { width: 100px; height: 100px; top: 70%; right: 5%; opacity: 0.3; transform: rotate(45deg); }
+  .shape:nth-child(5) { width: 60px; height: 60px; top: 10%; right: 15%; opacity: 0.4; transform: rotate(20deg); }
+
+  .top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, var(--red-dark), var(--red), #e84040, var(--red));
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(192,17,31,0.5);
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px 40px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 12px;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.1);
+    overflow: hidden;
+    animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    background: var(--gray-light);
+    border-bottom: 1px solid var(--gray);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-header .logo {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--teal), #1a8c95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(42,180,192,0.4);
+  }
+
+  .card-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .card-body {
+    padding: 24px 24px 20px;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+  }
+
+  .input-group:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(42,180,192,0.15);
+  }
+
+  .input-icon {
+    width: 44px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-light);
+    border-right: 1.5px solid var(--gray);
+    color: #8a9ab0;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .input-group input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    height: 46px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+  }
+
+  .input-group input::placeholder { color: #aab5c0; }
+
+  .toggle-btn {
+    width: 40px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8a9ab0;
+    font-size: 15px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle-btn:hover { color: var(--teal); }
+
+  .captcha-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .captcha-box {
+    background: var(--teal);
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 4px;
+    user-select: none;
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.3);
+  }
+
+  .refresh-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--gray);
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #8a9ab0;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+    transform: rotate(180deg);
+  }
+
+  .captcha-input-group {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: white;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .captcha-input-group:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(42,180,192,0.15);
+  }
+
+  .captcha-check {
+    width: 36px; height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .captcha-check input[type="checkbox"] {
+    width: 16px; height: 16px;
+    cursor: pointer;
+    accent-color: var(--teal);
+  }
+
+  .captcha-input-group input[type="text"] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    height: 46px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+  }
+
+  .captcha-input-group input::placeholder { color: #aab5c0; }
+
+  .captcha-edit {
+    width: 40px; height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a9ab0;
+    font-size: 15px;
+  }
+
+  .btn-login {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #2a9fd6, var(--teal));
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(42,180,192,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(42,180,192,0.5);
+  }
+
+  .btn-login:active { transform: translateY(0); }
+
+  .btn-recover {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #5cb800, #7ed800);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(92,184,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-recover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(92,184,0,0.45);
+  }
+
+  .role-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 4px;
+  }
+
+  .role-icon {
+    width: 32px; height: 32px;
+    background: var(--gray-light);
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .role-select {
+    appearance: none;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    padding: 6px 32px 6px 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a9ab0'/%3E%3C/svg%3E") no-repeat right 10px center;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .role-select:focus { border-color: var(--teal); }
+
+  .footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 20px 16px 24px;
+    animation: fadeIn 0.8s 0.4s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .footer p {
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    line-height: 1.7;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .footer .sys-title {
+    color: rgba(255,255,255,0.8);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .alert {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .alert.error {
+    display: block;
+    background: rgba(192,17,31,0.08);
+    border: 1px solid rgba(192,17,31,0.25);
+    color: var(--red-dark);
+  }
+
+  @media (max-width: 480px) {
+    .card-body { padding: 18px 16px 16px; }
+    .card-header { padding: 14px 16px; }
+    .card-header h1 { font-size: 13px; }
+    .captcha-box { font-size: 18px; padding: 7px 14px; }
+  }
+
+  @media (max-width: 360px) {
+    .captcha-row { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<div class="bg-shapes">
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+</div>
+
+<div class="page-wrapper">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="logo">🎓</div>
+      <h1>Carrera de Informática</h1>
+    </div>
+
+    <div class="card-body">
+      <div class="alert error" id="alert" style="display:none"></div>
+
+      <div class="input-group">
+        <div class="input-icon">👤</div>
+        <input type="text" id="usuario" placeholder="Usuario" autocomplete="username">
+        <button class="toggle-btn" tabindex="-1">👁</button>
+      </div>
+
+      <div class="input-group">
+        <div class="input-icon">🔒</div>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <button class="toggle-btn" id="togglePass" onclick="togglePassword()" tabindex="-1">👁</button>
+      </div>
+
+      <div class="captcha-row">
+        <div class="captcha-box" id="captchaDisplay">q W k s</div>
+        <button class="refresh-btn" onclick="refreshCaptcha()" title="Nuevo código">🔄</button>
+      </div>
+
+      <div class="captcha-input-group">
+        <div class="captcha-check">
+          <input type="checkbox" id="captchaCheck">
+        </div>
+        <input type="text" id="captchaInput" placeholder="Ingresa el Código de Seguridad">
+        <div class="captcha-edit">✏️</div>
+      </div>
+
+      <button class="btn-login" onclick="handleLogin()">
+        INGRESAR ➤
+      </button>
+
+      <button class="btn-recover" onclick="handleRecover()">
+        Recuperar Contraseña ➤
+      </button>
+
+      <div class="role-row">
+        <div class="role-icon">💼</div>
+        <select class="role-select" id="roleSelect">
+          <option>🎓 Estudiante</option>
+          <option>👨‍🏫 Docente</option>
+          <option>🏛️ Administrativo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="sys-title">Web 2.0 - Sistema de Seguimiento Académico</div>
+    <p>La División de Sistemas de Información y Estadística tiene derechos de propiedad intelectuales relacionados con la tecnología utilizada en el desarrollo del Software S.S.A, por tanto toda copia no autorizada será sancionado bajo las normas de propiedad de la Universidad Mayor de San Andrés UMSA y las leyes establecidas en nuestro país.</p>
+  </div>
+
+</div>
+
+<script>
+  const captchaChars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let currentCaptcha = '';
+
+  function generateCaptcha() {
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += captchaChars[Math.floor(Math.random() * captchaChars.length)];
+      if (i < 3) result += ' ';
+    }
+    currentCaptcha = result.replace(/ /g, '');
+    return result;
+  }
+
+  function refreshCaptcha() {
+    const display = document.getElementById('captchaDisplay');
+    display.style.opacity = '0';
+    display.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      display.textContent = generateCaptcha();
+      display.style.transition = 'all 0.2s ease';
+      display.style.opacity = '1';
+      display.style.transform = 'scale(1)';
+    }, 150);
+    document.getElementById('captchaInput').value = '';
+  }
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showAlert(msg) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert error';
+  }
+
+  function handleLogin() {
+    const usuario = document.getElementById('usuario').value.trim();
+    const pass = document.getElementById('password').value;
+    const captchaInput = document.getElementById('captchaInput').value.replace(/ /g, '');
+
+    if (!usuario) { showAlert('Por favor ingresa tu usuario.'); return; }
+    if (!pass)    { showAlert('Por favor ingresa tu contraseña.'); return; }
+    if (captchaInput.toLowerCase() !== currentCaptcha.toLowerCase()) {
+      showAlert('El código de seguridad no coincide. Intenta de nuevo.');
+      refreshCaptcha();
+      return;
+    }
+
+    // Redirigir a historial académico
+    window.location.href = 'https://ssainformatica-umsa.github.io/SSAINFORMATICA.github.io/';
+  }
+
+  function handleRecover() {
+    const usuario = document.getElementById('usuario').value.trim();
+    if (!usuario) {
+      showAlert('Ingresa tu nombre de usuario para recuperar la contraseña.');
+      return;
+    }
+    alert('📧 Se enviará un correo de recuperación a la cuenta asociada a: ' + usuario);
+  }
+
+  document.getElementById('captchaDisplay').textContent = generateCaptcha();
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+
+</body>
+</html>
