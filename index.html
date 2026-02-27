@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S.S.A. — Sistema de Seguimiento Académico</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Nunito:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== GLOBAL ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', sans-serif; }
+
+/* ===== PAGE SWITCHING ===== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== LOGIN PAGE ===== */
+#page-login {
+  min-height: 100vh;
+  background: #0d2137;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow-x: hidden;
+}
+
+  :root {
+    --red: #c0111f;
+    --red-dark: #8e0c17;
+    --blue-dark: #0d2137;
+    --blue-mid: #163352;
+    --blue-light: #1e4a77;
+    --teal: #2ab4c0;
+    --green: #5cb800;
+    --green-hover: #4a9900;
+    --white: #ffffff;
+    --gray-light: #f4f6f8;
+    --gray: #c8d0db;
+    --text: #2c3e50;
+    --shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    background: var(--blue-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 80%, rgba(30,74,119,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 20%, rgba(22,51,82,0.6) 0%, transparent 60%),
+      linear-gradient(160deg, #0d2137 0%, #163352 50%, #0d2137 100%);
+    z-index: 0;
+  }
+
+  .bg-shapes {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .shape {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.04);
+    border-radius: 4px;
+    transform: rotate(30deg);
+  }
+  .shape:nth-child(1) { width: 180px; height: 180px; top: 60%; left: 2%; opacity: 0.5; }
+  .shape:nth-child(2) { width: 120px; height: 120px; top: 20%; left: 5%; opacity: 0.3; }
+  .shape:nth-child(3) { width: 250px; height: 250px; top: 30%; right: 1%; opacity: 0.25; transform: rotate(15deg); }
+  .shape:nth-child(4) { width: 100px; height: 100px; top: 70%; right: 5%; opacity: 0.3; transform: rotate(45deg); }
+  .shape:nth-child(5) { width: 60px; height: 60px; top: 10%; right: 15%; opacity: 0.4; transform: rotate(20deg); }
+
+  .top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, var(--red-dark), var(--red), #e84040, var(--red));
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(192,17,31,0.5);
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px 40px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 12px;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.1);
+    overflow: hidden;
+    animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    background: var(--gray-light);
+    border-bottom: 1px solid var(--gray);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-header .logo {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--teal), #1a8c95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(42,180,192,0.4);
+  }
+
+  .card-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .card-body {
+    padding: 24px 24px 20px;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+  }
+
+  .input-group:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(42,180,192,0.15);
+  }
+
+  .input-icon {
+    width: 44px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-light);
+    border-right: 1.5px solid var(--gray);
+    color: #8a9ab0;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .input-group input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    height: 46px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+  }
+
+  .input-group input::placeholder { color: #aab5c0; }
+
+  .toggle-btn {
+    width: 40px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8a9ab0;
+    font-size: 15px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle-btn:hover { color: var(--teal); }
+
+  .captcha-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .captcha-box {
+    background: var(--teal);
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 4px;
+    user-select: none;
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.3);
+  }
+
+  .refresh-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--gray);
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #8a9ab0;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+    transform: rotate(180deg);
+  }
+
+  .captcha-input-group {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: white;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .captcha-input-group:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(42,180,192,0.15);
+  }
+
+  .captcha-check {
+    width: 36px; height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .captcha-check input[type="checkbox"] {
+    width: 16px; height: 16px;
+    cursor: pointer;
+    accent-color: var(--teal);
+  }
+
+  .captcha-input-group input[type="text"] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    height: 46px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+  }
+
+  .captcha-input-group input::placeholder { color: #aab5c0; }
+
+  .captcha-edit {
+    width: 40px; height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a9ab0;
+    font-size: 15px;
+  }
+
+  .btn-login {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #2a9fd6, var(--teal));
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(42,180,192,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(42,180,192,0.5);
+  }
+
+  .btn-login:active { transform: translateY(0); }
+
+  .btn-recover {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #5cb800, #7ed800);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(92,184,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-recover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(92,184,0,0.45);
+  }
+
+  .role-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 4px;
+  }
+
+  .role-icon {
+    width: 32px; height: 32px;
+    background: var(--gray-light);
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .role-select {
+    appearance: none;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    padding: 6px 32px 6px 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a9ab0'/%3E%3C/svg%3E") no-repeat right 10px center;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .role-select:focus { border-color: var(--teal); }
+
+  .footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 20px 16px 24px;
+    animation: fadeIn 0.8s 0.4s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .footer p {
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    line-height: 1.7;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .footer .sys-title {
+    color: rgba(255,255,255,0.8);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .alert {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .alert.error {
+    display: block;
+    background: rgba(192,17,31,0.08);
+    border: 1px solid rgba(192,17,31,0.25);
+    color: var(--red-dark);
+  }
+
+  @media (max-width: 480px) {
+    .card-body { padding: 18px 16px 16px; }
+    .card-header { padding: 14px 16px; }
+    .card-header h1 { font-size: 13px; }
+    .captcha-box { font-size: 18px; padding: 7px 14px; }
+  }
+
+  @media (max-width: 360px) {
+    .captcha-row { flex-direction: column; gap: 8px; }
+  }
+
+
+/* ===== HISTORIAL PAGE ===== */
+#page-historial {
+  min-height: 100vh;
+  background: #f4f6f8;
+  font-family: 'DM Sans', sans-serif;
+}
+
+  :root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --surface2: #eef1f5;
+    --border: #d0d7de;
+    --accent: #1a56db;
+    --accent2: #0e7490;
+    --text: #1a1e27;
+    --muted: #6b7280;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #b45309;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Navbar */
+  nav {
+    background: #1a3a5c;
+    border-bottom: 1px solid #0f2540;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .nav-links a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+  .nav-user {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.15); }
+
+  .nav-menu-wrap {
+    position: relative;
+    margin-left: auto;
+  }
+
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 220px;
+    z-index: 200;
+    overflow: hidden;
+    animation: fadeDown 0.15s ease;
+  }
+
+  .nav-dropdown.open { display: block; }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .nav-dropdown a {
+    display: block;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1a1e27;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .nav-username {
+    display: block;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a56db;
+    background: #f0f4ff;
+    cursor: default;
+    user-select: none;
+  }
+
+  .nav-dropdown a:hover { background: #f4f6f8; }
+
+  .nav-divider {
+    height: 1px;
+    background: #e8ecf0;
+    margin: 0;
+  }
+
+  /* Main */
+  main {
+    max-width: 1100px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Profile card */
+  .profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #1a56db, #0e7490);
+  }
+
+  .profile-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(26,86,219,0.12);
+  }
+
+  .profile-info h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.3rem;
+    color: #2196a0;
+  }
+
+  .profile-info h1 span { color: #2196a0; }
+
+  .profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .profile-meta span { display: flex; align-items: center; gap: 0.35rem; }
+
+  .tag {
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    color: var(--accent2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-left: 0.5rem;
+  }
+
+  /* Section */
+  .section {
+    background: var(--surface);
+    border: 1px solid #c8d0d8;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    animation: slideUp 0.4s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+
+  .section-header {
+    padding: 0.6rem 1.2rem;
+    background: #ffffff;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .section-header .year-badge {
+    color: #2196a0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .section-header .period {
+    color: #2196a0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead th {
+    padding: 0.55rem 1rem;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #444;
+    border-bottom: 1px solid #d0d7de;
+    white-space: nowrap;
+    background: #fff;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #e8ecf0;
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f9fafb; }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    color: #333;
+  }
+
+  td.num { color: #555; font-size: 0.85rem; }
+  td.sigla { font-weight: 700; color: #222; font-size: 0.85rem; }
+  td.materia { font-weight: 400; color: #333; }
+  td.par { text-align: center; color: #333; }
+  td.nota { text-align: center; font-weight: 400; font-size: 0.875rem; color: #333; }
+  td.folio { color: #555; font-size: 0.85rem; }
+  td.docente { font-size: 0.82rem; color: #555; }
+
+  /* Observaciones — texto plano como el original */
+  .obs-aprobado  { color: #2e7d32; font-weight: 400; font-size: 0.875rem; }
+  .obs-reprobado { color: #c62828; font-weight: 700; font-size: 0.875rem; }
+  .obs-abandono  { color: #e65100; font-weight: 700; font-size: 0.875rem; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    border-top: 2px solid #c8d0d8;
+    background: #e8f5e9;
+    padding: 0.55rem 0;
+    width: 100%;
+  }
+
+  .stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    padding: 0.3rem 0.5rem;
+    border-right: 1px solid #c3dfc3;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a7a7a;
+    white-space: nowrap;
+  }
+
+  .stat-value {
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #1a7a7a;
+  }
+
+  .sv-green  { color: #2e7d32; }
+  .sv-red    { color: #c62828; }
+  .sv-orange { color: #e65100; }
+  .sv-blue   { color: #1a1a1a; }
+  .sv-white  { color: #1a7a7a; }
+
+  .stat-sep { display: none; }
+
+  /* Btn */
+  .btn-generate {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 0 20px rgba(22,163,74,0.2);
+  }
+
+  .btn-generate:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px rgba(22,163,74,0.35);
+  }
+
+  @media (max-width: 768px) {
+
+    /* Navbar mobile - compact */
+    nav { padding: 0 0.75rem; gap: 0.5rem; }
+    .nav-links { display: none; }
+    .nav-user { font-size: 0.75rem; margin-left: auto; }
+
+    /* Main padding */
+    main { margin: 1rem auto; padding: 0 0.5rem; }
+
+    /* Profile card compact */
+    .profile-card { flex-direction: column; text-align: center; padding: 1rem; gap: 0.75rem; }
+    .profile-meta { justify-content: center; flex-direction: column; align-items: center; gap: 0.25rem; }
+    .profile-info h1 { font-size: 1.2rem; }
+    .tag { display: inline-block; margin-top: 0.3rem; }
+
+    /* Section box must not clip content - scroll inside */
+    .section {
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    /* Scrollable wrapper for table + stats */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+
+    table { min-width: 680px; font-size: 0.78rem; }
+    thead th { padding: 0.5rem 0.6rem; font-size: 0.7rem; }
+    td { padding: 0.6rem 0.6rem; }
+    td.docente { font-size: 0.72rem; }
+
+    /* Stats bar same scroll width */
+    .stats-bar { min-width: 680px; }
+    .stat-label, .stat-value { font-size: 0.72rem; }
+  }
+
+  @media (max-width: 480px) {
+    table { min-width: 620px; }
+    .stats-bar { min-width: 620px; }
+  }
+
+
+/* ===== INSCRIPCIONES PAGE ===== */
+#page-inscripciones {
+  min-height: 100vh;
+  background: #f4f6f8;
+  font-family: 'DM Sans', sans-serif;
+}
+
+  :root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --border: #d0d7de;
+    --text: #1a1e27;
+    --muted: #6b7280;
+    --teal: #2196a0;
+    --brown: #5d4037;
+    --brown-dark: #3e2723;
+    --green: #388e3c;
+    --orange: #f57c00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Navbar */
+  nav {
+    background: #1a3a5c;
+    border-bottom: 1px solid #0f2540;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 0.25rem; flex: 1; }
+
+  .nav-links a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+  .nav-menu-wrap { position: relative; margin-left: auto; }
+
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.15); }
+
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 220px;
+    z-index: 200;
+    overflow: hidden;
+    animation: fadeDown 0.15s ease;
+  }
+  .nav-dropdown.open { display: block; }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .nav-username {
+    display: block;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a56db;
+    background: #f0f4ff;
+    cursor: default;
+    user-select: none;
+  }
+
+  .nav-dropdown a {
+    display: block;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1a1e27;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .nav-dropdown a:hover { background: #f4f6f8; }
+  .nav-divider { height: 1px; background: #e8ecf0; }
+
+  /* Main */
+  main {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Info box */
+  .info-box {
+    background: #dff0f5;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    animation: slideUp 0.4s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .info-box h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--teal);
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.02em;
+  }
+
+  .info-box p {
+    font-size: 0.88rem;
+    color: #2d5a62;
+    line-height: 1.6;
+  }
+
+  .info-box p strong { font-weight: 700; }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: slideUp 0.4s ease 0.1s both;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead tr {
+    background: #e8f5e9;
+  }
+
+  thead th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #333;
+    border-bottom: 1px solid #c8d8c8;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #eef0f2;
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfc; }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    color: #333;
+  }
+
+  td.nro { color: #777; font-size: 0.82rem; width: 50px; }
+  td.nombre { font-weight: 600; }
+  td.gestion { color: #555; }
+  td.periodo { color: #555; }
+  td.acciones { white-space: nowrap; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.8rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none;
+    transition: all 0.15s;
+    margin-right: 0.3rem;
+  }
+
+  .btn-ingresar {
+    background: #6d4c41;
+    color: #fff;
+  }
+  .btn-ingresar:hover { background: #4e342e; }
+
+  .btn-cp {
+    background: #a5d6a7;
+    color: #1b5e20;
+  }
+  .btn-cp:hover { background: #81c784; }
+
+  .btn-horarios {
+    background: #e65100;
+    color: #fff;
+  }
+  .btn-horarios:hover { background: #bf360c; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    nav { padding: 0 0.75rem; gap: 0.5rem; }
+    .nav-links { display: none; }
+    main { margin: 1rem auto; padding: 0 0.75rem; }
+    .info-box { padding: 1rem; }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 580px; }
+    thead th, td { padding: 0.6rem 0.7rem; font-size: 0.8rem; }
+  }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 500;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header {
+    background: #4a90b8;
+    color: #fff;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .modal-header h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .modal-close:hover { opacity: 1; }
+
+  .modal-body { padding: 1.25rem; }
+
+  .modal-alert {
+    background: #fff3f3;
+    border: 1px solid #f5c6c6;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #c62828;
+  }
+
+  .modal-info {
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: #333;
+  }
+
+  .modal-info .mat-nro { font-weight: 700; }
+  .modal-info .fecha-label { color: #1a56db; font-weight: 700; }
+  .modal-info .fecha-val-red { color: #c62828; font-weight: 700; }
+  .modal-info .hora-label { color: #1a56db; font-weight: 700; }
+  .modal-info .hora-val-red { color: #c62828; font-weight: 700; }
+
+  .modal-info-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .modal-table-wrap { overflow-x: auto; }
+
+  .modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    border: 1px solid #d0d7de;
+  }
+
+  .modal-table thead th {
+    background: #f5f5f5;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    font-weight: 700;
+    color: #333;
+    border: 1px solid #d0d7de;
+    font-size: 0.82rem;
+  }
+
+  .modal-table tbody tr { border-bottom: 1px solid #e8ecf0; }
+  .modal-table tbody tr:hover { background: #fafafa; }
+
+  .modal-table td {
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #e8ecf0;
+    color: #333;
+    vertical-align: middle;
+  }
+
+  .modal-table td.mt-num { color: #777; width: 40px; }
+  .modal-table td.mt-sigla { font-weight: 700; white-space: nowrap; }
+  .modal-table td.mt-materia { }
+  .modal-table td.mt-paralelo { white-space: nowrap; }
+
+  .btn-par {
+    background: #f5a623;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-right: 0.3rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-edit {
+    background: #4a90d9;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.72rem;
+    cursor: pointer;
+    margin-right: 0.3rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-link {
+    background: #7cb342;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #e8ecf0;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-cerrar {
+    background: #fff;
+    border: 1px solid #c0c0c0;
+    border-radius: 5px;
+    padding: 0.45rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    color: #333;
+    transition: background 0.15s;
+  }
+  .btn-cerrar:hover { background: #f0f0f0; }
+
+  /* ===== HORARIO ===== */
+  .horario-section {
+    display: none;
+    margin-top: 1.2rem;
+    border-top: 2px solid #e0e0e0;
+    padding-top: 1rem;
+  }
+  .horario-section.visible { display: block; }
+
+  .horario-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    flex-wrap: wrap;
+  }
+
+  .horario-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #333;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-ocultar {
+    background: #1a7ab8;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-ocultar:hover { background: #1560a0; }
+
+  .horario-wrap { overflow-x: auto; }
+
+  .horario-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    min-width: 520px;
+  }
+
+  .horario-table th {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 0.55rem 0.5rem;
+    text-align: center;
+    font-weight: 700;
+    border: 1px solid #0f2540;
+    font-size: 0.75rem;
+  }
+
+  .horario-table td {
+    border: 1px solid #d0d7de;
+    padding: 0.4rem 0.3rem;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 70px;
+    height: 48px;
+    font-size: 0.72rem;
+    color: #333;
+  }
+
+  .horario-table td.hora-col {
+    background: #f5f5f5;
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: #333;
+    white-space: nowrap;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .cell-blue {
+    background: #b3d9f0;
+    border-radius: 3px;
+    padding: 0.2rem;
+    font-weight: 600;
+    color: #1a3a5c;
+    line-height: 1.4;
+  }
+
+  .cell-green {
+    background: #a5d6a7;
+    border: 2px solid #e53935;
+    border-radius: 3px;
+    padding: 0.2rem;
+    font-weight: 600;
+    color: #1b5e20;
+    line-height: 1.4;
+  }
+
+  .cell-orange {
+    background: #ffcc80;
+    border-radius: 3px;
+    padding: 0.2rem;
+    font-weight: 600;
+    color: #7c4a00;
+    line-height: 1.4;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="page-login" class="page active">
+
+
+<div class="top-bar"></div>
+
+<div class="bg-shapes">
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+</div>
+
+<div class="page-wrapper">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="logo">🎓</div>
+      <h1>Carrera de Informática</h1>
+    </div>
+
+    <div class="card-body">
+      <div class="alert error" id="alert" style="display:none"></div>
+
+      <div class="input-group">
+        <div class="input-icon">👤</div>
+        <input type="text" id="usuario" placeholder="Usuario" autocomplete="username">
+        <button class="toggle-btn" tabindex="-1">👁</button>
+      </div>
+
+      <div class="input-group">
+        <div class="input-icon">🔒</div>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <button class="toggle-btn" id="togglePass" onclick="togglePassword()" tabindex="-1">👁</button>
+      </div>
+
+      <div class="captcha-row">
+        <div class="captcha-box" id="captchaDisplay">q W k s</div>
+        <button class="refresh-btn" onclick="refreshCaptcha()" title="Nuevo código">🔄</button>
+      </div>
+
+      <div class="captcha-input-group">
+        <div class="captcha-check">
+          <input type="checkbox" id="captchaCheck">
+        </div>
+        <input type="text" id="captchaInput" placeholder="Ingresa el Código de Seguridad">
+        <div class="captcha-edit">✏️</div>
+      </div>
+
+      <button class="btn-login" onclick="handleLogin()">
+        INGRESAR ➤
+      </button>
+
+      <button class="btn-recover" onclick="handleRecover()">
+        Recuperar Contraseña ➤
+      </button>
+
+      <div class="role-row">
+        <div class="role-icon">💼</div>
+        <select class="role-select" id="roleSelect">
+          <option>🎓 Estudiante</option>
+          <option>👨‍🏫 Docente</option>
+          <option>🏛️ Administrativo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="sys-title">Web 2.0 - Sistema de Seguimiento Académico</div>
+    <p>La División de Sistemas de Información y Estadística tiene derechos de propiedad intelectuales relacionados con la tecnología utilizada en el desarrollo del Software S.S.A, por tanto toda copia no autorizada será sancionado bajo las normas de propiedad de la Universidad Mayor de San Andrés UMSA y las leyes establecidas en nuestro país.</p>
+  </div>
+
+</div>
+
+<script>
+  const captchaChars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let currentCaptcha = '';
+
+  function generateCaptcha() {
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += captchaChars[Math.floor(Math.random() * captchaChars.length)];
+      if (i < 3) result += ' ';
+    }
+    currentCaptcha = result.replace(/ /g, '');
+    return result;
+  }
+
+  function refreshCaptcha() {
+    const display = document.getElementById('captchaDisplay');
+    display.style.opacity = '0';
+    display.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      display.textContent = generateCaptcha();
+      display.style.transition = 'all 0.2s ease';
+      display.style.opacity = '1';
+      display.style.transform = 'scale(1)';
+    }, 150);
+    document.getElementById('captchaInput').value = '';
+  }
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showAlert(msg) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert error';
+  }
+
+  function handleLogin() {
+    const usuario = document.getElementById('usuario').value.trim();
+    const pass = document.getElementById('password').value;
+    const captchaInput = document.getElementById('captchaInput').value.replace(/ /g, '');
+
+    if (!usuario) { showAlert('Por favor ingresa tu usuario.'); return; }
+    if (!pass)    { showAlert('Por favor ingresa tu contraseña.'); return; }
+    if (captchaInput.toLowerCase() !== currentCaptcha.toLowerCase()) {
+      showAlert('El código de seguridad no coincide. Intenta de nuevo.');
+      refreshCaptcha();
+      return;
+    }
+
+    // Redirigir a historial académico
+    showPage('historial');
+  }
+
+  function handleRecover() {
+    const usuario = document.getElementById('usuario').value.trim();
+    if (!usuario) {
+      showAlert('Ingresa tu nombre de usuario para recuperar la contraseña.');
+      return;
+    }
+    alert('📧 Se enviará un correo de recuperación a la cuenta asociada a: ' + usuario);
+  }
+
+  document.getElementById('captchaDisplay').textContent = generateCaptcha();
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+
+
+</div>
+
+<!-- ========== HISTORIAL ========== -->
+<div id="page-historial" class="page">
+
+
+<nav>
+  <div class="nav-brand">S.S.A.</div>
+  <div class="nav-links">
+    <a href="#">Mis Documentos ▾</a>
+    <a href="#">Administración Personal ▾</a>
+    <a href="#">Inscripciones ▾</a>
+    <a href="#" onclick="showPage('historial'); return false;">Historial Académico ▾</a>
+  </div>
+  <div class="nav-user">
+    <div class="nav-menu-wrap">
+      <button class="nav-btn" onclick="toggleMenu()">☰</button>
+      <div class="nav-dropdown" id="navDropdown">
+        <span class="nav-username">JHOEL COPA MORALES</span>
+        <div class="nav-divider"></div>
+        <a href="https://matriculacion.umsa.bo/matriculacion/authentication/login" target="_blank">Administración Personal</a>
+        <a href="#" onclick="showPage('inscripciones'); return false;">Inscripciones</a>
+        <a href="#" onclick="showPage('historial'); return false;">Historial Académico</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Profile -->
+  <div class="profile-card" style="animation: slideUp 0.4s ease both;">
+    <div class="profile-avatar">
+      <span id="avatar-initials">JC</span>
+    </div>
+    <div class="profile-info">
+      <h1>Historial <span>Académico</span></h1>
+      <div class="profile-meta">
+        <span>👤 COPA MORALES JHOEL</span>
+        <span>🪪 CI: 10027998</span>
+        <span>🎓 Reg. Universitario: 1815276</span>
+      </div>
+      <div style="margin-top:0.6rem; font-size:0.82rem; color:var(--muted);">
+        Pensum de Estudio <strong style="color:var(--text)">2023 AJUSTADO</strong>
+        <span class="tag">Seguridad de la Información</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <button class="btn-generate" onclick="window.print()">
+    📄 Generar Documento
+  </button>
+
+  <!-- 2023 SEGUNDO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2023</span>
+      <span class="period">Segundo Semestre</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>Sigla</th>
+          <th>Materia</th>
+          <th>Par.</th>
+          <th>Nota</th>
+          <th>Folio</th>
+          <th>Observación</th>
+          <th>Docente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="sigla">INF-111</td>
+          <td class="materia">Programación I</td>
+          <td class="par">D</td>
+          <td class="nota" style="color:var(--green)">63</td>
+          <td class="folio">204</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Ph.D. MARISOL TELLEZ RAMIREZ</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="sigla">INF-112</td>
+          <td class="materia">Fundamentos Digitales</td>
+          <td class="par">C</td>
+          <td class="nota" style="color:var(--green)">67</td>
+          <td class="folio">220</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Lic. EDWING LOPEZ FLORES</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="sigla">INF-113</td>
+          <td class="materia">Programación Web I</td>
+          <td class="par">D</td>
+          <td class="nota" style="color:var(--green)">72</td>
+          <td class="folio">254</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Lic. BRIGIDA ALEXANDRA CARVAJAL BLANCO</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="sigla">INF-114</td>
+          <td class="materia">Álgebra</td>
+          <td class="par">A</td>
+          <td class="nota" style="color:var(--green)">58</td>
+          <td class="folio">265</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="sigla">INF-115</td>
+          <td class="materia">Cálculo I</td>
+          <td class="par">C</td>
+          <td class="nota" style="color:var(--green)">55</td>
+          <td class="folio">321</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Mg.Sc. RUDY WILFREDO MAYTA CALLISAYA</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="sigla">INF-116</td>
+          <td class="materia">Física</td>
+          <td class="par">E</td>
+          <td class="nota" style="color:var(--green)">54</td>
+          <td class="folio">362</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Lic. MONICA POZADAS ZAMBRANA</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">61.50</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">61.50</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2023 VERANO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2023</span>
+      <span class="period">Verano</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>Sigla</th>
+          <th>Materia</th>
+          <th>Par.</th>
+          <th>Nota</th>
+          <th>Folio</th>
+          <th>Observación</th>
+          <th>Docente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="sigla">INF-112</td>
+          <td class="materia">Fundamentos Digitales</td>
+          <td class="par">A</td>
+          <td class="nota" style="color:var(--green)">73</td>
+          <td class="folio">37</td>
+          <td><span class="obs-aprobado">APROBADO</span></td>
+          <td class="docente">Mg.Sc. PATRICIA QUISPE FLORES</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">1</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">1</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">73.00</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">73.00</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2024 PRIMERO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2024</span>
+      <span class="period">Primer Semestre</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>No.</th><th>Sigla</th><th>Materia</th><th>Par.</th><th>Nota</th><th>Folio</th><th>Observación</th><th>Docente</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="sigla">INF-121</td><td class="materia">Programación II</td><td class="par">A</td><td class="nota" style="color:var(--red)">32</td><td class="folio">112</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Dr. OMAR VILLANUEVA GUTIERREZ</td></tr>
+        <tr><td class="num">2</td><td class="sigla">INF-122</td><td class="materia">Estructuras de Datos</td><td class="par">B</td><td class="nota" style="color:var(--red)">28</td><td class="folio">118</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Lic. EDWING LOPEZ FLORES</td></tr>
+        <tr><td class="num">3</td><td class="sigla">INF-123</td><td class="materia">Programación Web II</td><td class="par">A</td><td class="nota" style="color:var(--red)">41</td><td class="folio">125</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Lic. BRIGIDA ALEXANDRA CARVAJAL BLANCO</td></tr>
+        <tr><td class="num">4</td><td class="sigla">INF-124</td><td class="materia">Álgebra Lineal</td><td class="par">C</td><td class="nota" style="color:var(--red)">35</td><td class="folio">132</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td></tr>
+        <tr><td class="num">5</td><td class="sigla">INF-125</td><td class="materia">Cálculo II</td><td class="par">B</td><td class="nota" style="color:var(--red)">38</td><td class="folio">140</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Mg.Sc. RUDY WILFREDO MAYTA CALLISAYA</td></tr>
+        <tr><td class="num">6</td><td class="sigla">INF-126</td><td class="materia">Física II</td><td class="par">A</td><td class="nota" style="color:var(--red)">29</td><td class="folio">148</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Lic. MONICA POZADAS ZAMBRANA</td></tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">33.83</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">0.00</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2024 SEGUNDO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2024</span>
+      <span class="period">Segundo Semestre</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>No.</th><th>Sigla</th><th>Materia</th><th>Par.</th><th>Nota</th><th>Folio</th><th>Observación</th><th>Docente</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="sigla">INF-121</td><td class="materia">Programación II</td><td class="par">B</td><td class="nota" style="color:var(--green)">64</td><td class="folio">201</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Dr. OMAR VILLANUEVA GUTIERREZ</td></tr>
+        <tr><td class="num">2</td><td class="sigla">INF-122</td><td class="materia">Estructuras de Datos</td><td class="par">A</td><td class="nota" style="color:var(--green)">58</td><td class="folio">208</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Lic. EDWING LOPEZ FLORES</td></tr>
+        <tr><td class="num">3</td><td class="sigla">INF-123</td><td class="materia">Programación Web II</td><td class="par">B</td><td class="nota" style="color:var(--green)">71</td><td class="folio">215</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Lic. BRIGIDA ALEXANDRA CARVAJAL BLANCO</td></tr>
+        <tr><td class="num">4</td><td class="sigla">INF-124</td><td class="materia">Álgebra Lineal</td><td class="par">A</td><td class="nota" style="color:var(--green)">60</td><td class="folio">222</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td></tr>
+        <tr><td class="num">5</td><td class="sigla">INF-125</td><td class="materia">Cálculo II</td><td class="par">C</td><td class="nota" style="color:var(--green)">55</td><td class="folio">230</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Mg.Sc. RUDY WILFREDO MAYTA CALLISAYA</td></tr>
+        <tr><td class="num">6</td><td class="sigla">INF-126</td><td class="materia">Física II</td><td class="par">B</td><td class="nota" style="color:var(--green)">62</td><td class="folio">238</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Lic. MONICA POZADAS ZAMBRANA</td></tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">61.67</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">61.67</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2024 VERANO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2024</span>
+      <span class="period">Verano</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>No.</th><th>Sigla</th><th>Materia</th><th>Par.</th><th>Nota</th><th>Folio</th><th>Observación</th><th>Docente</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="sigla">INF-124</td><td class="materia">Álgebra Lineal</td><td class="par">A</td><td class="nota" style="color:var(--green)">60</td><td class="folio">45</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td></tr>
+        <tr><td class="num">2</td><td class="sigla">INF-135</td><td class="materia">Estadística I</td><td class="par">B</td><td class="nota" style="color:var(--green)">57</td><td class="folio">52</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Mg.Sc. RUDY WILFREDO MAYTA CALLISAYA</td></tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">2</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">2</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">58.50</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">58.50</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2025 PRIMERO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2025</span>
+      <span class="period">Primer Semestre</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>No.</th><th>Sigla</th><th>Materia</th><th>Par.</th><th>Nota</th><th>Folio</th><th>Observación</th><th>Docente</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="sigla">INF-211</td><td class="materia">Base de Datos II</td><td class="par">A</td><td class="nota" style="color:var(--green)">78</td><td class="folio">301</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Mg.Sc. ZARA YUJRA CAMA</td></tr>
+        <tr><td class="num">2</td><td class="sigla">INF-212</td><td class="materia">Redes de Computadoras II</td><td class="par">B</td><td class="nota" style="color:var(--green)">74</td><td class="folio">308</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Lic. EDWING LOPEZ FLORES</td></tr>
+        <tr><td class="num">3</td><td class="sigla">INF-213</td><td class="materia">Seguridad Informática II</td><td class="par">A</td><td class="nota" style="color:var(--green)">82</td><td class="folio">315</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Dr. OMAR VILLANUEVA GUTIERREZ</td></tr>
+        <tr><td class="num">4</td><td class="sigla">INF-214</td><td class="materia">Ingeniería de Software I</td><td class="par">C</td><td class="nota" style="color:var(--green)">66</td><td class="folio">322</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Ph.D. MARISOL TELLEZ RAMIREZ</td></tr>
+        <tr><td class="num">5</td><td class="sigla">INF-215</td><td class="materia">Estadística II</td><td class="par">B</td><td class="nota" style="color:var(--green)">61</td><td class="folio">330</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Mg.Sc. RUDY WILFREDO MAYTA CALLISAYA</td></tr>
+        <tr><td class="num">6</td><td class="sigla">INF-216</td><td class="materia">Matemática Discreta</td><td class="par">A</td><td class="nota" style="color:var(--green)">69</td><td class="folio">338</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td></tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">71.67</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">71.67</span></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2025 SEGUNDO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="year-badge">2025</span>
+      <span class="period">Segundo Semestre</span>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>No.</th><th>Sigla</th><th>Materia</th><th>Par.</th><th>Nota</th><th>Folio</th><th>Observación</th><th>Docente</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="sigla">INF-221</td><td class="materia">Criptografía</td><td class="par">A</td><td class="nota" style="color:var(--green)">85</td><td class="folio">401</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">M.Sc. CARLOS RIVERA MAMANI</td></tr>
+        <tr><td class="num">2</td><td class="sigla">INF-222</td><td class="materia">Auditoría de Sistemas</td><td class="par">B</td><td class="nota" style="color:var(--green)">79</td><td class="folio">408</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Mg.Sc. ZARA YUJRA CAMA</td></tr>
+        <tr><td class="num">3</td><td class="sigla">INF-223</td><td class="materia">Ingeniería de Software II</td><td class="par">A</td><td class="nota" style="color:var(--green)">71</td><td class="folio">415</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Ph.D. MARISOL TELLEZ RAMIREZ</td></tr>
+        <tr><td class="num">4</td><td class="sigla">INF-224</td><td class="materia">Gestión de Proyectos TI</td><td class="par">C</td><td class="nota" style="color:var(--green)">68</td><td class="folio">422</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">Lic. BRIGIDA ALEXANDRA CARVAJAL BLANCO</td></tr>
+        <tr><td class="num">5</td><td class="sigla">INF-225</td><td class="materia">Inteligencia Artificial</td><td class="par">B</td><td class="nota" style="color:var(--red)">45</td><td class="folio">430</td><td><span class="obs-reprobado">REPROBADO</span></td><td class="docente">Ing. RODRIGO MAMANI CONDORI</td></tr>
+        <tr><td class="num">6</td><td class="sigla">INF-226</td><td class="materia">Legislación Informática</td><td class="par">A</td><td class="nota" style="color:var(--green)">63</td><td class="folio">438</td><td><span class="obs-aprobado">APROBADO</span></td><td class="docente">M.Sc. CHARLIE ANIBAL LOZANO CORREA</td></tr>
+      </tbody>
+    </table>
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-label sv-white">INSCRITAS : </span><span class="stat-value sv-white">6</span></div>
+      <div class="stat-item"><span class="stat-label sv-green">APROBADAS : </span><span class="stat-value sv-green">5</span></div>
+      <div class="stat-item"><span class="stat-label sv-red">REPROBADAS : </span><span class="stat-value sv-red">1</span></div>
+      <div class="stat-item"><span class="stat-label sv-orange">ABANDONOS : </span><span class="stat-value sv-orange">0</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.GRAL : </span><span class="stat-value sv-blue">68.50</span></div>
+      <div class="stat-item"><span class="stat-label sv-blue">PROM.APROB : </span><span class="stat-value sv-blue">73.20</span></div>
+    </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function toggleMenu() {
+    const d = document.getElementById('navDropdown');
+    d.classList.toggle('open');
+  }
+  // Close when clicking outside
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.nav-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('navDropdown').classList.remove('open');
+    }
+  });
+</script>
+
+</div>
+
+<!-- ========== INSCRIPCIONES ========== -->
+<div id="page-inscripciones" class="page">
+
+
+<nav>
+  <a class="nav-brand" href="#" onclick="showPage('historial'); return false;">S.S.A.</a>
+  <div class="nav-links">
+    <a href="#" onclick="showPage('historial'); return false;">Mis Documentos ▾</a>
+    <a href="https://matriculacion.umsa.bo/matriculacion/authentication/login" target="_blank">Administración Personal ▾</a>
+    <a href="#" onclick="showPage('inscripciones'); return false;">Inscripciones ▾</a>
+    <a href="#" onclick="showPage('historial'); return false;">Historial Académico ▾</a>
+  </div>
+  <div class="nav-menu-wrap">
+    <button class="nav-btn" onclick="toggleMenuInscripciones()">☰</button>
+    <div class="nav-dropdown" id="navDropdown2">
+      <span class="nav-username">JHOEL COPA MORALES</span>
+      <div class="nav-divider"></div>
+      <a href="https://matriculacion.umsa.bo/matriculacion/authentication/login" target="_blank">Administración Personal</a>
+      <a href="#" onclick="showPage('inscripciones'); return false;">Inscripciones</a>
+      <a href="#" onclick="showPage('historial'); return false;">Historial Académico</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <div class="info-box">
+    <h2>Administrar Mis Inscripciones</h2>
+    <p>Gestiona <strong>inscripciones</strong> durante su <strong>formación académica</strong> a partir de la implementación del Sistema de Seguimiento Académico en su Carrera, para <strong>ver detalles de su inscripción</strong> presione sobre un registro de la lista desplegada.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nro.</th>
+          <th>Nombre</th>
+          <th>Gestión</th>
+          <th>Periodo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="nro">1</td>
+          <td class="nombre" data-sem="PRIMERO 2026">PRIMERO 2026</td>
+          <td class="gestion">2026</td>
+          <td class="periodo">PRIMERO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('PRIMERO 2026')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">2</td>
+          <td class="nombre" data-sem="EX. MESA 2025">EX. MESA 2025</td>
+          <td class="gestion">2025</td>
+          <td class="periodo">EX. MESA</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('EX. MESA 2025')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">3</td>
+          <td class="nombre" data-sem="VERANO 2025">VERANO 2025</td>
+          <td class="gestion">2025</td>
+          <td class="periodo">VERANO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('VERANO 2025')">▶ Ingresar</button>
+            <button class="btn btn-cp">⬇ Obtener CP</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">4</td>
+          <td class="nombre" data-sem="SEGUNDO 2025">SEGUNDO 2025</td>
+          <td class="gestion">2025</td>
+          <td class="periodo">SEGUNDO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('SEGUNDO 2025')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">5</td>
+          <td class="nombre" data-sem="INVIERNO 2025">INVIERNO 2025</td>
+          <td class="gestion">2025</td>
+          <td class="periodo">INVIERNO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('INVIERNO 2025')">▶ Ingresar</button>
+            <button class="btn btn-cp">⬇ Obtener CP</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">6</td>
+          <td class="nombre" data-sem="PRIMERO 2025">PRIMERO 2025</td>
+          <td class="gestion">2025</td>
+          <td class="periodo">PRIMERO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('PRIMERO 2025')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">7</td>
+          <td class="nombre" data-sem="VERANO 2024">VERANO 2024</td>
+          <td class="gestion">2024</td>
+          <td class="periodo">VERANO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('VERANO 2024')">▶ Ingresar</button>
+            <button class="btn btn-cp">⬇ Obtener CP</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">8</td>
+          <td class="nombre" data-sem="SEGUNDO 2024">SEGUNDO 2024</td>
+          <td class="gestion">2024</td>
+          <td class="periodo">SEGUNDO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('SEGUNDO 2024')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">9</td>
+          <td class="nombre" data-sem="INVIERNO 2024">INVIERNO 2024</td>
+          <td class="gestion">2024</td>
+          <td class="periodo">INVIERNO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('INVIERNO 2024')">▶ Ingresar</button>
+            <button class="btn btn-cp">⬇ Obtener CP</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">10</td>
+          <td class="nombre" data-sem="PRIMERO 2024">PRIMERO 2024</td>
+          <td class="gestion">2024</td>
+          <td class="periodo">PRIMERO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('PRIMERO 2024')">▶ Ingresar</button>
+
+          </td>
+        </tr>
+        <tr>
+          <td class="nro">11</td>
+          <td class="nombre" data-sem="SEGUNDO 2023">SEGUNDO 2023</td>
+          <td class="gestion">2023</td>
+          <td class="periodo">SEGUNDO</td>
+          <td class="acciones">
+            <button class="btn btn-ingresar" onclick="openModal('SEGUNDO 2023')">▶ Ingresar</button>
+            <button class="btn btn-cp">⬇ Obtener CP</button>
+
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  function toggleMenu() {
+    const d = document.getElementById('navDropdown');
+    d.classList.toggle('open');
+  }
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.nav-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('navDropdown').classList.remove('open');
+    }
+  });
+
+  // Materias por semestre (de la página de historial)
+  const semestres = {
+    'PRIMERO 2026': {
+      matricula: '46617-2026', maxMat: 6, inscritas: 5,
+      fechaIni: '20/02/2026', fechaFin: '21/02/2026',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-221', materia: 'CRIPTOGRAFÍA', par: 'Par. A' },
+        { sigla: 'INF-222', materia: 'AUDITORÍA DE SISTEMAS', par: 'Par. B' },
+        { sigla: 'INF-223', materia: 'INGENIERÍA DE SOFTWARE II', par: 'Par. A' },
+        { sigla: 'INF-225', materia: 'INTELIGENCIA ARTIFICIAL', par: 'Par. B' },
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+      ]
+    },
+    'EX. MESA 2025': {
+      matricula: '45100-2025', maxMat: 3, inscritas: 2,
+      fechaIni: '10/12/2025', fechaFin: '12/12/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+      ]
+    },
+    'VERANO 2025': {
+      matricula: '44800-2025', maxMat: 2, inscritas: 2,
+      fechaIni: '15/01/2025', fechaFin: '16/01/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-211', materia: 'BASE DE DATOS II', par: 'Par. A' },
+        { sigla: 'INF-212', materia: 'REDES DE COMPUTADORAS II', par: 'Par. B' },
+      ]
+    },
+    'SEGUNDO 2025': {
+      matricula: '44500-2025', maxMat: 6, inscritas: 6,
+      fechaIni: '01/08/2025', fechaFin: '02/08/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-221', materia: 'CRIPTOGRAFÍA', par: 'Par. A' },
+        { sigla: 'INF-222', materia: 'AUDITORÍA DE SISTEMAS', par: 'Par. B' },
+        { sigla: 'INF-223', materia: 'INGENIERÍA DE SOFTWARE II', par: 'Par. A' },
+        { sigla: 'INF-224', materia: 'GESTIÓN DE PROYECTOS TI', par: 'Par. C' },
+        { sigla: 'INF-225', materia: 'INTELIGENCIA ARTIFICIAL (REPROBADO)', par: 'Par. B' },
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+      ]
+    },
+    'INVIERNO 2025': {
+      matricula: '44200-2025', maxMat: 2, inscritas: 2,
+      fechaIni: '01/07/2025', fechaFin: '02/07/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-216', materia: 'MATEMÁTICA DISCRETA', par: 'Par. A' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+      ]
+    },
+    'PRIMERO 2025': {
+      matricula: '43900-2025', maxMat: 6, inscritas: 6,
+      fechaIni: '03/02/2025', fechaFin: '04/02/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-211', materia: 'BASE DE DATOS II', par: 'Par. A' },
+        { sigla: 'INF-212', materia: 'REDES DE COMPUTADORAS II', par: 'Par. B' },
+        { sigla: 'INF-213', materia: 'SEGURIDAD INFORMÁTICA II', par: 'Par. A' },
+        { sigla: 'INF-214', materia: 'INGENIERÍA DE SOFTWARE I', par: 'Par. C' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+        { sigla: 'INF-216', materia: 'MATEMÁTICA DISCRETA', par: 'Par. A' },
+      ]
+    },
+    'VERANO 2024': {
+      matricula: '43100-2024', maxMat: 2, inscritas: 2,
+      fechaIni: '15/01/2024', fechaFin: '16/01/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. A' },
+        { sigla: 'INF-135', materia: 'ESTADÍSTICA I', par: 'Par. B' },
+      ]
+    },
+    'SEGUNDO 2024': {
+      matricula: '42800-2024', maxMat: 6, inscritas: 6,
+      fechaIni: '01/08/2024', fechaFin: '02/08/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-121', materia: 'PROGRAMACIÓN II', par: 'Par. B' },
+        { sigla: 'INF-122', materia: 'ESTRUCTURAS DE DATOS', par: 'Par. A' },
+        { sigla: 'INF-123', materia: 'PROGRAMACIÓN WEB II', par: 'Par. B' },
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. A' },
+        { sigla: 'INF-125', materia: 'CÁLCULO II', par: 'Par. C' },
+        { sigla: 'INF-126', materia: 'FÍSICA II', par: 'Par. B' },
+      ]
+    },
+    'INVIERNO 2024': {
+      matricula: '42500-2024', maxMat: 2, inscritas: 1,
+      fechaIni: '01/07/2024', fechaFin: '02/07/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-131', materia: 'BASE DE DATOS I', par: 'Par. A' },
+      ]
+    },
+    'PRIMERO 2024': {
+      matricula: '42200-2024', maxMat: 6, inscritas: 6,
+      fechaIni: '03/02/2024', fechaFin: '04/02/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-121', materia: 'PROGRAMACIÓN II', par: 'Par. A' },
+        { sigla: 'INF-122', materia: 'ESTRUCTURAS DE DATOS', par: 'Par. B' },
+        { sigla: 'INF-123', materia: 'PROGRAMACIÓN WEB II', par: 'Par. A' },
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. C' },
+        { sigla: 'INF-125', materia: 'CÁLCULO II', par: 'Par. B' },
+        { sigla: 'INF-126', materia: 'FÍSICA II', par: 'Par. A' },
+      ]
+    },
+    'SEGUNDO 2023': {
+      matricula: '41500-2023', maxMat: 6, inscritas: 6,
+      fechaIni: '20/02/2023', fechaFin: '21/02/2023',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-111', materia: 'PROGRAMACIÓN I', par: 'Par. D' },
+        { sigla: 'INF-112', materia: 'FUNDAMENTOS DIGITALES', par: 'Par. C' },
+        { sigla: 'INF-113', materia: 'PROGRAMACIÓN WEB I', par: 'Par. D' },
+        { sigla: 'INF-114', materia: 'ÁLGEBRA', par: 'Par. A' },
+        { sigla: 'INF-115', materia: 'CÁLCULO I', par: 'Par. C' },
+        { sigla: 'INF-116', materia: 'FÍSICA', par: 'Par. E' },
+      ]
+    },
+  };
+
+  function openModal(nombre) {
+    const data = semestres[nombre];
+    if (!data) return;
+
+    document.getElementById('modalTitle').textContent = 'Realizar Inscripción';
+    document.getElementById('modalMatricula').textContent = 'Matrícula Nro. ' + data.matricula;
+    document.getElementById('modalMaxMat').textContent = 'Max. Materias a Insc: ' + data.maxMat;
+    document.getElementById('modalInscritas').textContent = 'Inscrito a ' + data.inscritas + ' Materias.';
+    document.getElementById('modalFecha').innerHTML =
+      '<span class="fecha-label">FECHA :</span> <span class="fecha-val-red">' + data.fechaIni + '</span> a <span class="fecha-val-red">' + data.fechaFin + '</span>';
+    document.getElementById('modalHora').innerHTML =
+      '<span class="hora-label">HORA :</span> <span class="hora-val-red">' + data.horaIni + '</span> a <span class="hora-val-red">' + data.horaFin + '</span>';
+
+    const tbody = document.getElementById('modalTbody');
+    tbody.innerHTML = '';
+    data.materias.forEach((m, i) => {
+      tbody.innerHTML += `
+        <tr>
+          <td class="mt-num">${i+1}</td>
+          <td class="mt-sigla">${m.sigla}</td>
+          <td class="mt-materia">${m.materia}</td>
+          <td class="mt-paralelo">
+            <button class="btn-par">✔ ${m.par}</button>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('horarioSection').classList.remove('visible');
+    document.getElementById('horarioWrap').innerHTML = buildHorario(data.materias, nombre);
+  }
+
+  function toggleHorario() {
+    const h = document.getElementById('horarioSection');
+    h.classList.toggle('visible');
+  }
+
+  // Color palette for cells
+  const cellColors = ['cell-blue','cell-green','cell-orange','cell-purple'];
+  const colorList = ['cell-blue','cell-orange','cell-green'];
+
+  // Fixed schedule slots per materia index
+  // Each materia gets assigned days + hours based on its position
+  const schedulePatterns = [
+    { days: [0,2], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+    { days: [1,3], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+    { days: [0,2], hours: ['11:00-11:59','12:00-12:59','13:00-13:59'] },
+    { days: [1,3], hours: ['11:00-11:59','12:00-12:59','13:00-13:59'] },
+    { days: [0,2], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [1,3], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [4,5], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+  ];
+
+  // Patrones especiales para PRIMERO 2026
+  const schedulePatterns2026 = [
+    { days: [0,2], hours: ['10:00-10:59','11:00-11:59'] },
+    { days: [1,3], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [0,2], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [1,3], hours: ['12:00-12:59','13:00-13:59'] },
+    { days: [4],   hours: ['14:00-14:59','15:00-15:59'] },
+  ];
+
+  const allHours = [
+    '07:00-07:59','08:00-08:59','09:00-09:59','10:00-10:59',
+    '11:00-11:59','12:00-12:59','13:00-13:59',
+    '14:00-14:59','15:00-15:59','16:00-16:59'
+  ];
+  const days = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+
+  function buildHorario(materias, semestre) {
+    const patterns = semestre === 'PRIMERO 2026' ? schedulePatterns2026 : schedulePatterns;
+    // Build a grid: hours x days
+    // grid[hour][day] = array of {sigla, par, colorClass}
+    const grid = {};
+    allHours.forEach(h => { grid[h] = {0:'',1:'',2:'',3:'',4:'',5:''}; });
+
+    materias.forEach((mat, idx) => {
+      const pattern = patterns[idx % patterns.length];
+      const color = colorList[idx % colorList.length];
+      const cell = `<div class="${color}">${mat.sigla}<br>${mat.par.replace('Par. ','Par.')}</div>`;
+      pattern.days.forEach(d => {
+        pattern.hours.forEach(h => {
+          if (grid[h]) {
+            grid[h][d] = grid[h][d] ? grid[h][d] + cell : cell;
+          }
+        });
+      });
+    });
+
+    // Only show hours that have content
+    const usedHours = allHours.filter(h => Object.values(grid[h]).some(v => v !== ''));
+
+    let html = `<table class="horario-table"><thead><tr><th>HORAS</th>`;
+    days.forEach(d => html += `<th>${d}</th>`);
+    html += `</tr></thead><tbody>`;
+
+    usedHours.forEach(h => {
+      html += `<tr><td class="hora-col">${h}</td>`;
+      for (let d = 0; d < 6; d++) {
+        html += `<td>${grid[h][d]}</td>`;
+      }
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    return html;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('horarioSection').classList.remove('visible');
+  }
+
+  // Close on overlay click
+  document.getElementById('modalOverlay') && document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Realizar Inscripción</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert">USTED ESTA FUERA DEL RANGO PERMITIDO DE INSCRIPCION</div>
+      <div class="modal-info">
+        <div class="modal-info-row">
+          <span>🎫 <span id="modalMatricula"></span></span>
+          <div class="modal-actions" style="margin:0">
+            <button class="btn btn-ingresar" style="background:#ffcc80; color:#7c4a00;" onclick="toggleHorario()">▶ Ver Horario</button>
+          </div>
+        </div>
+        <div>🖥 <span id="modalMaxMat" class="mat-nro"></span></div>
+        <div>🔔 <span id="modalInscritas"></span></div>
+        <div id="modalFecha"></div>
+        <div id="modalHora"></div>
+      </div>
+      <div class="modal-table-wrap">
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Sigla</th>
+              <th>Materia</th>
+              <th>Ver Paralelos</th>
+            </tr>
+          </thead>
+          <tbody id="modalTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- HORARIO -->
+      <div class="horario-section" id="horarioSection">
+        <div class="horario-title-row">
+          <span class="horario-title">HORARIO INSCRIPCION ESTUDIANTE</span>
+          <button class="btn-ocultar" onclick="toggleHorario()">✕ Ocultar Horario</button>
+        </div>
+        <div class="horario-wrap" id="horarioWrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cerrar" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+<script>
+/* ===== NAVIGATION ===== */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ===== LOGIN JS ===== */
+
+  const captchaChars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let currentCaptcha = '';
+
+  function generateCaptcha() {
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += captchaChars[Math.floor(Math.random() * captchaChars.length)];
+      if (i < 3) result += ' ';
+    }
+    currentCaptcha = result.replace(/ /g, '');
+    return result;
+  }
+
+  function refreshCaptcha() {
+    const display = document.getElementById('captchaDisplay');
+    display.style.opacity = '0';
+    display.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      display.textContent = generateCaptcha();
+      display.style.transition = 'all 0.2s ease';
+      display.style.opacity = '1';
+      display.style.transform = 'scale(1)';
+    }, 150);
+    document.getElementById('captchaInput').value = '';
+  }
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showAlert(msg) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert error';
+  }
+
+  function handleLogin() {
+    const usuario = document.getElementById('usuario').value.trim();
+    const pass = document.getElementById('password').value;
+    const captchaInput = document.getElementById('captchaInput').value.replace(/ /g, '');
+
+    if (!usuario) { showAlert('Por favor ingresa tu usuario.'); return; }
+    if (!pass)    { showAlert('Por favor ingresa tu contraseña.'); return; }
+    if (captchaInput.toLowerCase() !== currentCaptcha.toLowerCase()) {
+      showAlert('El código de seguridad no coincide. Intenta de nuevo.');
+      refreshCaptcha();
+      return;
+    }
+
+    // Redirigir a historial académico
+    showPage('historial');
+  }
+
+  function handleRecover() {
+    const usuario = document.getElementById('usuario').value.trim();
+    if (!usuario) {
+      showAlert('Ingresa tu nombre de usuario para recuperar la contraseña.');
+      return;
+    }
+    alert('📧 Se enviará un correo de recuperación a la cuenta asociada a: ' + usuario);
+  }
+
+  document.getElementById('captchaDisplay').textContent = generateCaptcha();
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+  });
+
+
+/* ===== HISTORIAL JS ===== */
+
+  function toggleMenu() {
+    const d = document.getElementById('navDropdown');
+    d.classList.toggle('open');
+  }
+  // Close when clicking outside
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.nav-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('navDropdown').classList.remove('open');
+    }
+  });
+
+
+/* ===== INSCRIPCIONES JS ===== */
+
+  function toggleMenu() {
+    const d = document.getElementById('navDropdown');
+    d.classList.toggle('open');
+  }
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.nav-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('navDropdown').classList.remove('open');
+    }
+  });
+
+  // Materias por semestre (de la página de historial)
+  const semestres = {
+    'PRIMERO 2026': {
+      matricula: '46617-2026', maxMat: 6, inscritas: 5,
+      fechaIni: '20/02/2026', fechaFin: '21/02/2026',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-221', materia: 'CRIPTOGRAFÍA', par: 'Par. A' },
+        { sigla: 'INF-222', materia: 'AUDITORÍA DE SISTEMAS', par: 'Par. B' },
+        { sigla: 'INF-223', materia: 'INGENIERÍA DE SOFTWARE II', par: 'Par. A' },
+        { sigla: 'INF-225', materia: 'INTELIGENCIA ARTIFICIAL', par: 'Par. B' },
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+      ]
+    },
+    'EX. MESA 2025': {
+      matricula: '45100-2025', maxMat: 3, inscritas: 2,
+      fechaIni: '10/12/2025', fechaFin: '12/12/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+      ]
+    },
+    'VERANO 2025': {
+      matricula: '44800-2025', maxMat: 2, inscritas: 2,
+      fechaIni: '15/01/2025', fechaFin: '16/01/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-211', materia: 'BASE DE DATOS II', par: 'Par. A' },
+        { sigla: 'INF-212', materia: 'REDES DE COMPUTADORAS II', par: 'Par. B' },
+      ]
+    },
+    'SEGUNDO 2025': {
+      matricula: '44500-2025', maxMat: 6, inscritas: 6,
+      fechaIni: '01/08/2025', fechaFin: '02/08/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-221', materia: 'CRIPTOGRAFÍA', par: 'Par. A' },
+        { sigla: 'INF-222', materia: 'AUDITORÍA DE SISTEMAS', par: 'Par. B' },
+        { sigla: 'INF-223', materia: 'INGENIERÍA DE SOFTWARE II', par: 'Par. A' },
+        { sigla: 'INF-224', materia: 'GESTIÓN DE PROYECTOS TI', par: 'Par. C' },
+        { sigla: 'INF-225', materia: 'INTELIGENCIA ARTIFICIAL (REPROBADO)', par: 'Par. B' },
+        { sigla: 'INF-226', materia: 'LEGISLACIÓN INFORMÁTICA', par: 'Par. A' },
+      ]
+    },
+    'INVIERNO 2025': {
+      matricula: '44200-2025', maxMat: 2, inscritas: 2,
+      fechaIni: '01/07/2025', fechaFin: '02/07/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-216', materia: 'MATEMÁTICA DISCRETA', par: 'Par. A' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+      ]
+    },
+    'PRIMERO 2025': {
+      matricula: '43900-2025', maxMat: 6, inscritas: 6,
+      fechaIni: '03/02/2025', fechaFin: '04/02/2025',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-211', materia: 'BASE DE DATOS II', par: 'Par. A' },
+        { sigla: 'INF-212', materia: 'REDES DE COMPUTADORAS II', par: 'Par. B' },
+        { sigla: 'INF-213', materia: 'SEGURIDAD INFORMÁTICA II', par: 'Par. A' },
+        { sigla: 'INF-214', materia: 'INGENIERÍA DE SOFTWARE I', par: 'Par. C' },
+        { sigla: 'INF-215', materia: 'ESTADÍSTICA II', par: 'Par. B' },
+        { sigla: 'INF-216', materia: 'MATEMÁTICA DISCRETA', par: 'Par. A' },
+      ]
+    },
+    'VERANO 2024': {
+      matricula: '43100-2024', maxMat: 2, inscritas: 2,
+      fechaIni: '15/01/2024', fechaFin: '16/01/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. A' },
+        { sigla: 'INF-135', materia: 'ESTADÍSTICA I', par: 'Par. B' },
+      ]
+    },
+    'SEGUNDO 2024': {
+      matricula: '42800-2024', maxMat: 6, inscritas: 6,
+      fechaIni: '01/08/2024', fechaFin: '02/08/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-121', materia: 'PROGRAMACIÓN II', par: 'Par. B' },
+        { sigla: 'INF-122', materia: 'ESTRUCTURAS DE DATOS', par: 'Par. A' },
+        { sigla: 'INF-123', materia: 'PROGRAMACIÓN WEB II', par: 'Par. B' },
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. A' },
+        { sigla: 'INF-125', materia: 'CÁLCULO II', par: 'Par. C' },
+        { sigla: 'INF-126', materia: 'FÍSICA II', par: 'Par. B' },
+      ]
+    },
+    'INVIERNO 2024': {
+      matricula: '42500-2024', maxMat: 2, inscritas: 1,
+      fechaIni: '01/07/2024', fechaFin: '02/07/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-131', materia: 'BASE DE DATOS I', par: 'Par. A' },
+      ]
+    },
+    'PRIMERO 2024': {
+      matricula: '42200-2024', maxMat: 6, inscritas: 6,
+      fechaIni: '03/02/2024', fechaFin: '04/02/2024',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-121', materia: 'PROGRAMACIÓN II', par: 'Par. A' },
+        { sigla: 'INF-122', materia: 'ESTRUCTURAS DE DATOS', par: 'Par. B' },
+        { sigla: 'INF-123', materia: 'PROGRAMACIÓN WEB II', par: 'Par. A' },
+        { sigla: 'INF-124', materia: 'ÁLGEBRA LINEAL', par: 'Par. C' },
+        { sigla: 'INF-125', materia: 'CÁLCULO II', par: 'Par. B' },
+        { sigla: 'INF-126', materia: 'FÍSICA II', par: 'Par. A' },
+      ]
+    },
+    'SEGUNDO 2023': {
+      matricula: '41500-2023', maxMat: 6, inscritas: 6,
+      fechaIni: '20/02/2023', fechaFin: '21/02/2023',
+      horaIni: '08:00:00', horaFin: '12:00:00',
+      materias: [
+        { sigla: 'INF-111', materia: 'PROGRAMACIÓN I', par: 'Par. D' },
+        { sigla: 'INF-112', materia: 'FUNDAMENTOS DIGITALES', par: 'Par. C' },
+        { sigla: 'INF-113', materia: 'PROGRAMACIÓN WEB I', par: 'Par. D' },
+        { sigla: 'INF-114', materia: 'ÁLGEBRA', par: 'Par. A' },
+        { sigla: 'INF-115', materia: 'CÁLCULO I', par: 'Par. C' },
+        { sigla: 'INF-116', materia: 'FÍSICA', par: 'Par. E' },
+      ]
+    },
+  };
+
+  function openModal(nombre) {
+    const data = semestres[nombre];
+    if (!data) return;
+
+    document.getElementById('modalTitle').textContent = 'Realizar Inscripción';
+    document.getElementById('modalMatricula').textContent = 'Matrícula Nro. ' + data.matricula;
+    document.getElementById('modalMaxMat').textContent = 'Max. Materias a Insc: ' + data.maxMat;
+    document.getElementById('modalInscritas').textContent = 'Inscrito a ' + data.inscritas + ' Materias.';
+    document.getElementById('modalFecha').innerHTML =
+      '<span class="fecha-label">FECHA :</span> <span class="fecha-val-red">' + data.fechaIni + '</span> a <span class="fecha-val-red">' + data.fechaFin + '</span>';
+    document.getElementById('modalHora').innerHTML =
+      '<span class="hora-label">HORA :</span> <span class="hora-val-red">' + data.horaIni + '</span> a <span class="hora-val-red">' + data.horaFin + '</span>';
+
+    const tbody = document.getElementById('modalTbody');
+    tbody.innerHTML = '';
+    data.materias.forEach((m, i) => {
+      tbody.innerHTML += `
+        <tr>
+          <td class="mt-num">${i+1}</td>
+          <td class="mt-sigla">${m.sigla}</td>
+          <td class="mt-materia">${m.materia}</td>
+          <td class="mt-paralelo">
+            <button class="btn-par">✔ ${m.par}</button>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('horarioSection').classList.remove('visible');
+    document.getElementById('horarioWrap').innerHTML = buildHorario(data.materias, nombre);
+  }
+
+  function toggleHorario() {
+    const h = document.getElementById('horarioSection');
+    h.classList.toggle('visible');
+  }
+
+  // Color palette for cells
+  const cellColors = ['cell-blue','cell-green','cell-orange','cell-purple'];
+  const colorList = ['cell-blue','cell-orange','cell-green'];
+
+  // Fixed schedule slots per materia index
+  // Each materia gets assigned days + hours based on its position
+  const schedulePatterns = [
+    { days: [0,2], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+    { days: [1,3], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+    { days: [0,2], hours: ['11:00-11:59','12:00-12:59','13:00-13:59'] },
+    { days: [1,3], hours: ['11:00-11:59','12:00-12:59','13:00-13:59'] },
+    { days: [0,2], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [1,3], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [4,5], hours: ['08:00-08:59','09:00-09:59','10:00-10:59'] },
+  ];
+
+  // Patrones especiales para PRIMERO 2026
+  const schedulePatterns2026 = [
+    { days: [0,2], hours: ['10:00-10:59','11:00-11:59'] },
+    { days: [1,3], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [0,2], hours: ['14:00-14:59','15:00-15:59'] },
+    { days: [1,3], hours: ['12:00-12:59','13:00-13:59'] },
+    { days: [4],   hours: ['14:00-14:59','15:00-15:59'] },
+  ];
+
+  const allHours = [
+    '07:00-07:59','08:00-08:59','09:00-09:59','10:00-10:59',
+    '11:00-11:59','12:00-12:59','13:00-13:59',
+    '14:00-14:59','15:00-15:59','16:00-16:59'
+  ];
+  const days = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+
+  function buildHorario(materias, semestre) {
+    const patterns = semestre === 'PRIMERO 2026' ? schedulePatterns2026 : schedulePatterns;
+    // Build a grid: hours x days
+    // grid[hour][day] = array of {sigla, par, colorClass}
+    const grid = {};
+    allHours.forEach(h => { grid[h] = {0:'',1:'',2:'',3:'',4:'',5:''}; });
+
+    materias.forEach((mat, idx) => {
+      const pattern = patterns[idx % patterns.length];
+      const color = colorList[idx % colorList.length];
+      const cell = `<div class="${color}">${mat.sigla}<br>${mat.par.replace('Par. ','Par.')}</div>`;
+      pattern.days.forEach(d => {
+        pattern.hours.forEach(h => {
+          if (grid[h]) {
+            grid[h][d] = grid[h][d] ? grid[h][d] + cell : cell;
+          }
+        });
+      });
+    });
+
+    // Only show hours that have content
+    const usedHours = allHours.filter(h => Object.values(grid[h]).some(v => v !== ''));
+
+    let html = `<table class="horario-table"><thead><tr><th>HORAS</th>`;
+    days.forEach(d => html += `<th>${d}</th>`);
+    html += `</tr></thead><tbody>`;
+
+    usedHours.forEach(h => {
+      html += `<tr><td class="hora-col">${h}</td>`;
+      for (let d = 0; d < 6; d++) {
+        html += `<td>${grid[h][d]}</td>`;
+      }
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    return html;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('horarioSection').classList.remove('visible');
+  }
+
+  // Close on overlay click
+  document.getElementById('modalOverlay') && document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+</script>
+</body>
+</html>
